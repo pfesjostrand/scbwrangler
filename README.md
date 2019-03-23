@@ -1,4 +1,4 @@
-# scbwranglr
+# scbwrangler
 
 **This is early work. I do not recommend using this package. But come back later!** 
 
