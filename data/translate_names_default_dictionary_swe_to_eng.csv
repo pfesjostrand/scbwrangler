@@ -1,0 +1,11 @@
+swedish,english,class
+ålder,age,integer
+år,year,integer
+kön,sex,character
+dag,day,character
+tid,time,character
+valår,year,integer
+vart.5.e.år,year,integer
+näringsgren.SNI69,sector,character
+parti,party,character
+parti.mm,party,character
