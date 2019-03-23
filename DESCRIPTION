@@ -1,10 +1,23 @@
 Package: scbwrangler
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Title: Making wrangling data from SCB (Swedish Statistics) a little bit easier and faster. 
+Version: 0.0.0.2000
+Authors@R: person("Filip", "Sjöstrand", email = "pfesjostrand@gmail.com", role = c("aut", "cre"))
+Description: Collection of functions for wrangling data from SCB (Swedish Statistics). Based on what
+    I repeatedly need to do myself. Currently loads directories with .px and .csv files, translate 
+    variable names into English (or any other language you can define a custom dictionary) reclass 
+    variables based on a definable "dictionary". Planning to add more built-in validation and some
+    functions for common mutations. This is a early work, I do not really recommend using it now. 
 Depends: R (>= 3.5.3)
-License: What license is it under?
+License: MIT License (see LICENSE file)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+Imports:
+    dplyr,
+    purrr,
+    stringr,
+    readr,
+    pxR,
+    here
+    
+    
