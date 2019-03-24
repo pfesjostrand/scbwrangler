@@ -3,6 +3,8 @@
 # completly rewritten on 23 march. Depends on stringr, dplyr, purrr, pxR, here
 # readR . This is a "early version" and work in progress.
 #
+# TODO: Check, test and write error handling
+#
 # Author: Filip Sjöstrand (pfesjostrand@gmail.com)
 #*****************************************************************************#
 
@@ -13,7 +15,7 @@
 #' @param path The path to the directory that should be read.
 #'
 #' @return Returns a list of data frames (tibbles) containing file contents.
-#'
+#' @export
 load_directory <- function(path) {
 
   # list path of items in directory, subset those ending with .px or.csv
@@ -70,7 +72,7 @@ load_directory <- function(path) {
 #' works only if there is a 1:1 mapping, not recommended.
 #'
 #' @return returns the data_frame, hopefully with translated names.
-#'
+#' @export
 translate_names <- function(data, dictionary = "default", reverse = FALSE) {
 
   # if dictionary is default a fallback set is used, if it is a character this is
@@ -147,7 +149,7 @@ translate_names <- function(data, dictionary = "default", reverse = FALSE) {
 #' @param to The column to classdic where class mappings are found
 #'
 #' @return Returns a reclassed data frame
-#'
+#' @export
 fix_factors <- function(data, classdic = "default",  fr = "english", to = "class") {
 
   # Optionally a data_frame can be used for class defintions; if not a classdic

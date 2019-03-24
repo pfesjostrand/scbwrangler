@@ -9,3 +9,4 @@ vart.5.e.år,year,integer
 näringsgren.SNI69,sector,character
 parti,party,character
 parti.mm,party,character
+region,region,character

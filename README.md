@@ -1,4 +1,4 @@
-# scbwranglr
+# scbwrangler
 
 **This is early work. I do not recommend using this package. But come back later!** 
 
@@ -13,7 +13,7 @@ Overall the aim is to get some super-easy tools that automates actions that, whi
 Run the following in R:
 ```
 install.packages("devtools")
-devtools::install_github("username/packagename")
+devtools::install_github("pfesjostrand/scbwrangler")
 ```
 
 ### Prerequisites

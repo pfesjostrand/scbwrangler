@@ -1,5 +1,5 @@
 Package: scbwrangler
-Title: Making wrangling data from SCB (Swedish Statistics) a little bit easier and faster. 
+Title: Some functions for convenient wrangling of data from SCB (Swedish Statistics). 
 Version: 0.0.0.2000
 Authors@R: person("Filip", "Sjöstrand", email = "pfesjostrand@gmail.com", role = c("aut", "cre"))
 Description: Collection of functions for wrangling data from SCB (Swedish Statistics). Based on what
@@ -19,5 +19,4 @@ Imports:
     readr,
     pxR,
     here
-    
     
