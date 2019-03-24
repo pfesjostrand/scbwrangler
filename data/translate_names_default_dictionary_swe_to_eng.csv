@@ -10,3 +10,6 @@ näringsgren.SNI69,sector,character
 parti,party,character
 parti.mm,party,character
 region,region,character
+utbildningsnivå,educational_level,factor
+medborgarskap,citizenship,factor
+value,value,NA
