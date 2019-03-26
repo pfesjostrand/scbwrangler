@@ -7,7 +7,7 @@
 # TODO: Make dlist into its own class https://www.datamentor.io/r-programming/s3-class/ etc.
 # TODO: Make fix_factors capable of automatically using "Swedish" if no "english" match exist.
 #
-# Author: Filip Sjöstrand (pfesjostrand@gmail.com)
+# Author: Filip Sjöstrand (pfesjostrand@gmail.com ; 46-702-745911 )
 #*****************************************************************************#
 
 # FUN: load_directory ---------------------------------------------------------------
@@ -18,7 +18,7 @@
 #'
 #' @return Returns a list of data frames (tibbles) containing file contents.
 #' @export
-load_directory <- function(path) {
+load_directory <- function(path, dlist = FALSE) {
 
   # list path of items in directory, subset those ending with .px or.csv
   dirlist <- paste(path, list.files(path), sep="/")
@@ -48,11 +48,16 @@ load_directory <- function(path) {
   if (length(dirlist_csv) != 0)  {
     ind1 <-  length(data) + 1
     ind2 <- (ind1 + length(dirlist_csv) - 1)
-    data[ind1:ind2] <- purr::map(dirlist_csv, csvread)
+    data[ind1:ind2] <- purrr::map(dirlist_csv, csvread)
     names(data)[ind1:ind2] <- namelist_csv
     if (all(names(data[ind1:ind2]) != namelist_csv)) {
       warning("Warning: Some .csv files seem to have not been read. Check.")
     }
+  }
+
+  # By default function returns here; I was experimenting with the below
+  if(dlist == FALSE) {
+    return(data)
   }
 
   # constructs a list and attaches data and additional records
@@ -157,29 +162,6 @@ translate_names <- function(data, dictionary = "default", reverse = FALSE) {
   names(data) <- translat
   return(data)
 }
-
-# FUN: translate_names_dlist --------------------------------------------------------
-#' translate_names_dlist
-#'
-#' dlist version of translate_names
-#'
-#' @param dlist dlist object such as returned by load_directory
-#' @param dictionary Either a path to a .csv file or a data frame object. If no
-#' dictionary is specified a fallback dictionary is used with a warning.
-#' @param reverse Setting this to true everses the order of the languages,
-#' works only if there is a 1:1 mapping, not recommended.
-#'
-#' @return updated dlist
-#' @export
-translate_names_dlist <- function(dlist, dictionary = "default", reverse = FALSE) {
-  dlist$data <- purrr::map(dlist$data, translate_names, dictionary, reverse)
-
-  dlist[[2]][[1]] <- unique(unlist(purrr::map(dlist$data, names)))
-  dlist[[2]][[2]] <- purrr::map(dlist$data, function(x) purrr::map_chr(x, class))
-
-  return(dlist)
-}
-
 
 # FUN: fix_factors ------------------------------------------------------------
 # Intended to take output from translate_names. Data in SCB .px files generally
@@ -315,6 +297,116 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
 
 }
 
+
+
+## EXPERIMENTAL NOT EXPORTED
+
+# FUN: load_directory_dlist ---------------------------------------------------
+#' load_directory
+#'
+#' Read .px and .csv files in a directory into a list of data frames.
+#' @param path The path to the directory that should be read.
+#'
+#' @return Returns a list of data frames (tibbles) containing file contents.
+load_directory <- function(path, dlist = FALSE) {
+
+  # list path of items in directory, subset those ending with .px or.csv
+  dirlist <- paste(path, list.files(path), sep="/")
+  dirlist_px  <- stringr::str_subset(dirlist, "\\.px$")
+  dirlist_csv <- stringr::str_subset(dirlist, "\\.csv$")
+
+  # get the names of items in directory that end with .px or .csv
+  namelist_px  <- stringr::str_subset(list.files(path), "\\.px$")
+  namelist_csv <- stringr::str_subset(list.files(path), "\\.csv$")
+
+  # define two functions for reading files and transforming into tibble
+  # and a list vector that will be part of the function return.
+  pxread  <- function(path) tibble::as_tibble(pxR::read.px(path))
+  csvread <- function(path) tibble::as_tibble(readr::read_csv(path))
+  data <- tibble::lst()
+
+  # read all .px files into data and check all .px items are read then read
+  # all .csv files onto the end of data and check all .csv imes are read.
+  if (length(dirlist_px) != 0) {
+    data[1:length(dirlist_px)] <- purrr::map(dirlist_px, pxread)
+    names(data)[1:length(dirlist_px)] <- namelist_px
+    if (all(names(data) != namelist_px)) {
+      warning("Warning: Some .px files seem to have not been read. Check.")
+    }
+  }
+
+  if (length(dirlist_csv) != 0)  {
+    ind1 <-  length(data) + 1
+    ind2 <- (ind1 + length(dirlist_csv) - 1)
+    data[ind1:ind2] <- purrr::map(dirlist_csv, csvread)
+    names(data)[ind1:ind2] <- namelist_csv
+    if (all(names(data[ind1:ind2]) != namelist_csv)) {
+      warning("Warning: Some .csv files seem to have not been read. Check.")
+    }
+  }
+
+  # By default function returns here; I was experimenting with the below
+  if(dlist == FALSE) {
+    return(data)
+  }
+
+  # constructs a list and attaches data and additional records
+  output <- tibble::lst()
+
+  # data
+  output[[1]]        <- data
+  names(output)[1]   <- "data"
+
+  # empty used by other functions
+  output[[2]]        <- tibble::lst()
+  names(output)[2]   <- "changed_vars"
+  output[[2]][[1]]      <- tibble::lst()
+  names(output[[2]])[1] <- "unique"
+  output[[2]][[2]]      <- tibble::lst()
+  names(output[[2]])[2] <- "details"
+
+  # record of original variables
+  output[[3]]        <- tibble::lst()
+  names(output)[3]   <- "original_vars"
+  output[[3]][[1]]      <- unique(unlist(purrr::map(data, names)))
+  names(output[[3]])[1] <- "unique"
+  output[[3]][[2]]      <- purrr::map(data, function(x) purrr::map_chr(x, class))
+  names(output[[3]])[2] <- "details"
+
+  # record of source paths
+  output[[4]]        <- tibble::lst()
+  names(output)[4]   <- "sources"
+  output[[4]][[1]]      <- dirlist_px
+  names(output[[4]])[1]  <- "paths_px"
+  output[[4]][[2]]      <- dirlist_csv
+  names(output[[4]])[2]  <- "paths_csv"
+
+  # return the list
+  return(output)
+}
+
+
+# FUN: translate_names_dlist --------------------------------------------------------
+#' translate_names_dlist
+#'
+#' dlist version of translate_names
+#'
+#' @param dlist dlist object such as returned by load_directory
+#' @param dictionary Either a path to a .csv file or a data frame object. If no
+#' dictionary is specified a fallback dictionary is used with a warning.
+#' @param reverse Setting this to true everses the order of the languages,
+#' works only if there is a 1:1 mapping, not recommended.
+#'
+#' @return updated dlist
+translate_names_dlist <- function(dlist, dictionary = "default", reverse = FALSE) {
+  dlist$data <- purrr::map(dlist$data, translate_names, dictionary, reverse)
+
+  dlist[[2]][[1]] <- unique(unlist(purrr::map(dlist$data, names)))
+  dlist[[2]][[2]] <- purrr::map(dlist$data, function(x) purrr::map_chr(x, class))
+
+  return(dlist)
+}
+
 # FUN: fix_factors_dlist --------------------------------------------------------
 #' fix_factors_dlist
 #'
@@ -326,7 +418,6 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
 #' @param to The column to classdic where class mappings are found
 #'
 #' @return updated dlist
-#' @export
 fix_factors_dlist <- function(dlist, classdic = "default",  fr = "english", to = "class") {
   dlist$data <- purrr::map(dlist$data, fix_factors, classdic,  fr, to)
 
@@ -334,3 +425,4 @@ fix_factors_dlist <- function(dlist, classdic = "default",  fr = "english", to =
 
   return(dlist)
 }
+

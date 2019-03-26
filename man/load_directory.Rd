@@ -4,14 +4,22 @@
 \alias{load_directory}
 \title{load_directory}
 \usage{
-load_directory(path)
+load_directory(path, dlist = FALSE)
+
+load_directory(path, dlist = FALSE)
 }
 \arguments{
+\item{path}{The path to the directory that should be read.}
+
 \item{path}{The path to the directory that should be read.}
 }
 \value{
 Returns a list of data frames (tibbles) containing file contents.
+
+Returns a list of data frames (tibbles) containing file contents.
 }
 \description{
+Read .px and .csv files in a directory into a list of data frames.
+
 Read .px and .csv files in a directory into a list of data frames.
 }
