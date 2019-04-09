@@ -4,7 +4,7 @@
 \alias{fix_factors}
 \title{fix_factors}
 \usage{
-fix_factors(data, classdic = "default", fr = "english", to = "class")
+fix_factors(data, classdic = "default", fr = 2, to = 3)
 }
 \arguments{
 \item{data}{Data frame object of which the vars are to be reclassed.}

@@ -18,7 +18,7 @@
 #'
 #' @return Returns a list of data frames (tibbles) containing file contents.
 #' @export
-load_directory <- function(path, dlist = FALSE) {
+load_directory <- function(path) {
 
   # list path of items in directory, subset those ending with .px or.csv
   dirlist <- paste(path, list.files(path), sep="/")
@@ -55,44 +55,8 @@ load_directory <- function(path, dlist = FALSE) {
     }
   }
 
-  # By default function returns here; I was experimenting with the below
-  if(dlist == FALSE) {
-    return(data)
-  }
+  return(data)
 
-  # constructs a list and attaches data and additional records
-  output <- tibble::lst()
-
-  # data
-  output[[1]]        <- data
-  names(output)[1]   <- "data"
-
-  # empty used by other functions
-  output[[2]]        <- tibble::lst()
-  names(output)[2]   <- "changed_vars"
-  output[[2]][[1]]      <- tibble::lst()
-  names(output[[2]])[1] <- "unique"
-  output[[2]][[2]]      <- tibble::lst()
-  names(output[[2]])[2] <- "details"
-
-  # record of original variables
-  output[[3]]        <- tibble::lst()
-  names(output)[3]   <- "original_vars"
-  output[[3]][[1]]      <- unique(unlist(purrr::map(data, names)))
-  names(output[[3]])[1] <- "unique"
-  output[[3]][[2]]      <- purrr::map(data, function(x) purrr::map_chr(x, class))
-  names(output[[3]])[2] <- "details"
-
-  # record of source paths
-  output[[4]]        <- tibble::lst()
-  names(output)[4]   <- "sources"
-  output[[4]][[1]]      <- dirlist_px
-  names(output[[4]])[1]  <- "paths_px"
-  output[[4]][[2]]      <- dirlist_csv
-  names(output[[4]])[2]  <- "paths_csv"
-
-  # return the list
-  return(output)
 }
 
 # FUN: translate_names --------------------------------------------------------
@@ -120,14 +84,14 @@ translate_names <- function(data, dictionary = "default", reverse = FALSE) {
   if (is.data.frame(dictionary) == FALSE) {
 
     if (dictionary == "default") {
-      dictionary <- suppressMessages( readr::read_csv(here::here(
+      dictionary <- suppressMessages(readr::read_csv(here::here(
         "data", "translate_names_default_dictionary_swe_to_eng.csv")))
       warning("No dictionary specified, fallback to default")
 
     } else {
       stopifnot(class(dictionary) == "character")
       stopifnot(file.exists(dictionary) == TRUE)
-      dictionary <- readr::read_csv(dictionary)
+      dictionary <- suppressMessages(readr::read_csv(dictionary))
     }
   }
 
@@ -189,7 +153,7 @@ translate_names <- function(data, dictionary = "default", reverse = FALSE) {
 #'
 #' @return Returns a reclassed data frame
 #' @export
-fix_factors <- function(data, classdic = "default",  fr = "english", to = "class") {
+fix_factors <- function(data, classdic = "default",  fr = 2, to = 3) {
 
   # Optionally a data_frame can be used for class defintions; if not a classdic
   # is treated as a path , if set to default it uses the same small dictionary
@@ -202,7 +166,7 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
     } else {
       stopifnot(class(classdic) == "character")
       stopifnot(file.exists(classdic) == TRUE)
-      classdic <- readr::read_csv(classdic)
+      classdic <- suppressMessages(readr::read_csv(classdic))
     }
   }
 
@@ -223,6 +187,25 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
   varnames <- names(data)
   classmatch <- classdic[[to]][match(varnames, classdic[[fr]])]
 
+  # hardcoded thing to fix "1 år", "2 år" ("1 years", "2 years") in age var.
+  fix_age_char <- function(y) {
+
+    if(!is.character(y)){
+      return(y)
+    }
+
+    if(all(str_detect(y[1:3], "år")) == TRUE) {
+      y <- str_trim(str_remove(str_remove(y, "år"), "\\+"))
+      return(y)
+    }
+    if(all(str_detect(y[1:3], "years")) == TRUE) {
+      y <- str_trim(str_remove(str_remove(y, "years"), "\\+"))
+      return(y)
+    }
+
+    return(y)
+  }
+
   # check if a classmatch element is found in any of the variation of class
   # names defined above. If so the the data column corresponding to that
   # classmatch is converted to the appropiate class. Long function follow.
@@ -238,6 +221,9 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
     if(class(y) == "factor" & (x %in% fact == FALSE)) {
       y <- as.character(y)
     }
+
+    # fixes "1 år", "2 years" probably not super robust.
+    y <- fix_age_char(y)
 
     if(x %in% intr) {
       ctrT <- ctrT + 1
@@ -276,7 +262,7 @@ fix_factors <- function(data, classdic = "default",  fr = "english", to = "class
     }
 
     if(ctrT < 1) {
-      warning("Instance of no match occured but NO NA in classmatch")
+      warning("Instance of no match occured but no NA in classmatch")
     }
 
     if(ctrT > 1) {
